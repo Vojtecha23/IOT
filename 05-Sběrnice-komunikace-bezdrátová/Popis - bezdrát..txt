@@ -1,0 +1,23 @@
+Projekt: Bezdrátová komunikace přes Wi-Fi (UDP)
+Instituce: Střední průmyslová škola, Trutnov, Školní 101
+
+Tento projekt demonstruje bezdrátové propojení dvou mikrokontrolérů Raspberry Pi Pico W pomocí technologie Wi-Fi a protokolu UDP. Systém umožňuje stisknutím fyzického tlačítka na jedné desce (klient) okamžitě ovládat na dálku LED diodu připojenou k druhé desce (přístupový bod). Celý systém využívá dvě klíčové technologie:
+
+Vstup (Fyzické ovládání): Na prvním Picu (klient) je k pinu GP16 připojeno tlačítko. Kód využívá interní pull-up rezistor zabudovaný přímo v procesoru, takže na pinu je ve výchozím stavu udržována logická jednička (3,3 V). Fyzickým stisknutím tlačítka se obvod spojí se zemí (GND), procesor zaznamená logickou nulu a program na tuto změnu zareaguje přípravou krátkého textového povelu k odeslání.
+
+Výstup (Wi-Fi sítě a UDP pakety): Druhé Pico W pracuje v režimu Access Point (přístupový bod) a vytváří vlastní lokální Wi-Fi síť s názvem "PicoSit". První Pico se k této síti připojí jako běžná stanice. Datová komunikace neprobíhá po drátech, ale vzduchem přes síťové UDP sockety. To umožňuje velmi rychlé odesílání malých textových paketů (např. "ZAPNI" a "VYPNI") na IP adresu a síťový port (5000) druhého zařízení. Jakmile druhé Pico tento textový paket zachytí a přečte, přepne digitální stav na svém výstupním pinu GP15 a tím zapne nebo vypne napájení pro připojenou LED diodu.
+
+Zapojení součástek
+Pro projekt jsou potřeba 4 hlavní hardwarové části: 2x Raspberry Pi Pico W, fyzické tlačítko a LED dioda s ochranným rezistorem. Komunikace je plně bezdrátová, fyzické propojení obou desek (např. společný GND) již není potřeba. Obě desky jsou napájeny zcela nezávisle ze svých USB portů.
+
+1. Zapojení ovládání (Pico 1 - Vysílač povelů s tlačítkem):
+
+První nožička tlačítka: připojena na digitální pin GP16 (fyzický pin 21).
+
+Druhá nožička tlačítka: připojena na zemnící pin GND (např. fyzický pin 23).
+
+2. Zapojení světla (Pico 2 - Přijímač s LED diodou):
+
+Ovládací signál: Pin GP15 (fyzický pin 20) je propojen přes ochranný rezistor (220–330 Ω) na delší nožičku LED diody (anoda).
+
+Uzavření obvodu: Kratší nožička LED diody (katoda) je připojena na libovolný pin GND (např. fyzický pin 23).
