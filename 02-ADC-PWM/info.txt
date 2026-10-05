@@ -1,0 +1,22 @@
+Tento projekt ukazuje, jak propojit analogový vstup a digitální výstup na mikrokontroléru Raspberry Pi Pico W. Slouží k tomu, že fyzickým otáčením knoflíku (potenciometru) plynule měníme jas externí LED diody. Celý systém využívá dvě klíčové technologie:
+
+Vstup (ADC - Analogově-digitální převodník): Potenciometr funguje jako plynulý regulátor napětí (od 0 do 3,3 V). Protože procesor rozumí jen jedničkám a nulám, využíváme na pinu GP26 zabudovaný ADC převodník. Ten měří aktuální napětí z potenciometru a převádí ho na srozumitelné číslo (v našem kódu od 0 do 65535).
+
+Výstup (PWM - Pulzně šířková modulace): Číslo získané z potenciometru rovnou posíláme na výstupní pin GP15. Pico W neumí reálně snížit napětí na pinu, aby dioda svítila méně. Místo toho pomocí PWM diodu extrémně rychle zapíná a vypíná (1000krát za sekundu). Podle toho, jak moc potenciometrem otočíme, se mění doba, po kterou dioda v každém cyklu svítí. Naše oko toto rychlé blikání nevidí a vnímá ho jako plynulou změnu jasu.
+
+Zapojení součástek
+Pro projekt jsou potřeba 3 hlavní hardwarové části: Raspberry Pi Pico W, otočný potenciometr a klasická LED dioda s ochranným rezistorem.
+
+1. Zapojení ovládání (Potenciometr):
+
+Levá nožička: připojena na napájecí pin 3V3(OUT) (fyzický pin 36).
+
+Prostřední nožička (běžec): připojena na vyhrazený analogový pin GP26 (fyzický pin 31, označený jako ADC0).
+
+Pravá nožička: připojena na zemnící pin GND (např. fyzický pin 33 nebo 38).
+
+2. Zapojení světla (LED dioda):
+
+Ovládací signál: Pin GP15 (fyzický pin 20) je propojen přes ochranný rezistor (cca 220–330 Ω) na delší nožičku LED diody (anoda). Rezistor je nutný, aby se dioda nespálila.
+
+Uzavření obvodu: Kratší nožička LED diody (katoda) je připojena na libovolný pin GND (např. fyzický pin 23).
