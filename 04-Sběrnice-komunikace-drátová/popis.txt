@@ -1,0 +1,31 @@
+Projekt: Sériová komunikace (UART) mezi mikrokontroléry
+Instituce: Střední průmyslová škola, Trutnov, Školní 101
+
+Tento projekt ukazuje, jak propojit dva mikrokontroléry Raspberry Pi Pico W pomocí sériové sběrnice (UART). Slouží k tomu, že fyzickým stisknutím tlačítka na první desce okamžitě rozsvítíme externí LED diodu na druhé desce. Celý systém využívá dvě klíčové technologie:
+
+Vstup (Tlačítko a interní rezistor): Na prvním Picu je připojeno tlačítko na pin GP16. Abychom nepotřebovali další externí součástky na nepájivém poli, využíváme interní pull-up rezistor zabudovaný přímo v procesoru, který udržuje na pinu stabilní logickou jedničku (3,3 V). Jakmile tlačítko stiskneme, obvod se spojí se zemí, napětí spadne na 0 V a procesor zaregistruje logickou nulu. Tuto změnu stavu kód vyhodnotí a připraví textový povel k odeslání.
+
+Výstup (UART komunikace a digitální řízení): Místo složitého nastavování Master/Slave zařízení používáme jednoduchou asynchronní sériovou linku UART. První Pico odesílá z pinu GP0 (TX) textový řetězec ("ZAPNI" nebo "VYPNI") rychlostí 9600 baudů. Druhé Pico neustále poslouchá na svém pinu GP1 (RX). Jakmile text přijme a dekóduje, pošle na svůj výstupní pin GP15 klasický digitální signál (logickou 1 nebo 0), čímž sepne nebo vypne napájení pro připojenou LED diodu.
+
+Zapojení součástek
+Pro projekt jsou potřeba 4 hlavní hardwarové části: 2x Raspberry Pi Pico W, fyzické tlačítko a klasická LED dioda s ochranným rezistorem.
+
+1. Propojení obou desek (Sběrnice UART):
+
+Referenční zem: Pin GND (např. fyzický pin 3) na prvním Picu je propojovacím kabelem spojen s pinem GND na druhém Picu. Bez tohoto propojení by desky neměly stejnou napěťovou hladinu a komunikace by nefungovala.
+
+Křížení dat (TX -> RX): Pin GP0 (fyzický pin 1) na prvním Picu je spojen s pinem GP1 (fyzický pin 2) na druhém Picu.
+
+Křížení dat (RX <- TX): Pin GP1 (fyzický pin 2) na prvním Picu je spojen s pinem GP0 (fyzický pin 1) na druhém Picu.
+
+2. Zapojení ovládání (Pico 1 - Tlačítko):
+
+První nožička tlačítka: připojena na vyhrazený digitální pin GP16 (fyzický pin 21).
+
+Druhá nožička tlačítka: připojena na zemnící pin GND (např. fyzický pin 23).
+
+3. Zapojení světla (Pico 2 - LED dioda):
+
+Ovládací signál: Pin GP15 (fyzický pin 20) je propojen přes ochranný rezistor (cca 220–330 Ω) na delší nožičku LED diody (anoda). Rezistor chrání diodu před spálením.
+
+Uzavření obvodu: Kratší nožička LED diody (katoda) je připojena na libovolný pin GND na druhém Picu (např. fyzický pin 23).
