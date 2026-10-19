@@ -1,0 +1,25 @@
+
+Tento projekt ukazuje, jak pomocí Raspberry Pi ovládat výstupní zařízení proměnnou hodnotou. V grafickém okně vytvořeném knihovnou Tkinter je posuvník s rozsahem 0 až 100. Jeho nastavením se mění střída PWM signálu na GPIO 18, kterým je řízen připojený bzučák. Jde o ukázku analogově působícího řízení pomocí digitálního signálu.
+
+Vstup (grafický posuvník): Ovládací prvek Scale umožňuje myší nastavit hodnotu od 0 do 100. Při každém posunutí se zavolá funkce zmen_hlasitost(hodnota). Ta přijatou hodnotu převede vydělením číslem 100 na desetinné číslo v rozsahu 0,0 až 1,0 a předá je do knihovny gpiozero.
+
+Výstup (PWM a bzučák): Bzučák je připojen na pin GPIO 18 (fyzický pin 12). Program používá PWMOutputDevice a PiGPIOFactory, která zajišťuje generování PWM prostřednictvím služby pigpio. PWM (pulzně šířková modulace) rychle střídá zapnutý a vypnutý stav výstupu. Změnou střídy, tedy poměru doby zapnutí vůči celé periodě, se mění působení signálu na připojené zařízení. Hodnota 0 znamená nulovou střídu (vypnutý výstup), hodnota 0,5 přibližně 50% střídu a hodnota 1 trvale zapnutý výstup. Skutečná hlasitost a charakter zvuku závisí na typu použitého bzučáku a frekvenci PWM; samotná změna střídy proto nemusí znamenat plynulou změnu vnímané hlasitosti.
+
+Zapojení součástek
+Pro projekt je potřeba Raspberry Pi, bzučák vhodný pro řízení z GPIO, propojovací vodiče a případně nepájivé pole. Použití konkrétního bzučáku musí odpovídat napěťovým a proudovým možnostem GPIO (3,3 V). Bzučák s vyšším odběrem se nesmí napájet přímo z GPIO; je nutné použít vhodný tranzistorový spínač a případné samostatné napájení.
+
+1. Zapojení bzučáku (PWM výstup):
+
+Signál: GPIO 18 (fyzický pin 12) slouží k řízení bzučáku. U nízkopříkonového bzučáku určeného pro přímé připojení k 3,3V GPIO vede na jeho kladný kontakt; u výkonnějšího bzučáku ovládá spínací obvod.
+
+Zem: Záporný kontakt bzučáku, případně zem jeho napájecího obvodu, je připojen na GND Raspberry Pi (například fyzický pin 14).
+
+2. Softwarové ovládání:
+
+Vstupem není externí senzor ani potenciometr, ale posuvník v grafickém prostředí. K jeho ovládání se používá myš a není nutné připojovat další fyzické tlačítko.
+
+Princip programu
+Program importuje prvky Tk, Scale a Label z knihovny Tkinter a třídy PWMOutputDevice a PiGPIOFactory z gpiozero. Nejprve nastaví PiGPIOFactory a inicializuje PWM výstup na GPIO 18. Poté otevře okno „Bzučák Dashboard“ o rozměrech 350 × 150 pixelů. V okně zobrazí nadpis „Intenzita bzučáku“ a vodorovný posuvník od 0 do 100. Každá změna polohy posuvníku vyvolá funkci zmen_hlasitost(), která vypočítá požadovanou střídu a zapíše ji do bzucak.value. O chod grafického rozhraní se stará okno.mainloop(). Aby fungovala zvolená PiGPIOFactory, musí být v prostředí dostupná a spuštěná služba pigpio.
+
+Výsledek
+Uživatel posouvá jezdec v grafickém okně a tím nastavuje střídu PWM signálu na GPIO 18. Bzučák podle svého typu reaguje změnou zvukového projevu nebo zapínání; při hodnotě 0 se výstup vypne. Projekt demonstruje řízení výstupního zařízení proměnnou hodnotou, využití PWM a propojení grafické aplikace s GPIO Raspberry Pi.

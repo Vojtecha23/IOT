@@ -1,0 +1,28 @@
+
+
+Tento projekt ukazuje práci s digitálními vstupy a výstupy na Raspberry Pi. Cílem je ovládat jednu LED diodu dvěma způsoby: fyzickým tlačítkem zapojeným k desce a softwarovým tlačítkem v grafickém okně. Oba způsoby ovládání mění stav stejné LED diody a grafické rozhraní vždy zobrazuje její aktuální stav.
+
+Vstup (fyzické a grafické tlačítko): Fyzické tlačítko je připojené na GPIO 27. Program používá knihovnu gpiozero a objekt Button, který standardně zapíná interní pull-up rezistor. V klidovém stavu je tak na vstupu logická jednička; po stisknutí tlačítka se pin spojí s GND a program rozpozná stisk. Druhým vstupem je tlačítko v okně vytvořeném pomocí knihovny Tkinter. Kliknutí myší vyvolá stejnou změnu stavu jako fyzické tlačítko.
+
+Výstup (LED a informace v okně): LED dioda je řízena digitálním výstupem GPIO 17. Program pomocí funkce led.toggle() střídavě přepíná zapnutý a vypnutý stav. Současně se aktualizuje grafické tlačítko: při rozsvícené LED je zelené a zobrazuje „ZAPNUTO“, při zhasnuté LED je červené a zobrazuje „VYPNUTO“.
+
+Zapojení součástek
+Pro projekt je potřeba Raspberry Pi s GPIO piny, jedna LED dioda, ochranný rezistor (například 220–330 Ω), fyzické tlačítko, propojovací vodiče a případně nepájivé pole. Pro grafické ovládání je potřeba prostředí umožňující otevření okna Tkinter.
+
+1. Zapojení LED diody (digitální výstup):
+
+Ovládací pin: GPIO 17 (fyzický pin 11) připojíme přes ochranný rezistor k anodě LED diody (delší nožička).
+
+Zem: Katodu LED diody (kratší nožička) připojíme na GND Raspberry Pi (například fyzický pin 9).
+
+2. Zapojení tlačítka (digitální vstup):
+
+První kontakt tlačítka: GPIO 27 (fyzický pin 13).
+
+Druhý kontakt tlačítka: GND (například fyzický pin 14). Díky internímu pull-up rezistoru není nutný samostatný externí rezistor pro vstup tlačítka.
+
+Princip programu
+Program importuje Tkinter pro grafické rozhraní a gpiozero pro práci s GPIO. Při spuštění nastaví LED na GPIO 17 a tlačítko na GPIO 27. Funkce prepni_z_gui() reaguje na kliknutí v okně a přepne stav LED. Funkce prepni_z_hw() je přiřazena události fyzického stisknutí tlačítka. Protože událost gpiozero může proběhnout mimo hlavní grafické vlákno, aktualizaci okna program naplánuje pomocí okno.after(0, aktualizuj_gui). Funkce aktualizuj_gui() nastavuje text a barvu grafického tlačítka podle skutečného stavu LED. Hlavní smyčku grafického rozhraní spouští okno.mainloop().
+
+Výsledek
+Stisk fyzického tlačítka nebo kliknutí na tlačítko v okně přepne LED diodu. Okno o rozměrech 300 × 200 pixelů ukazuje její aktuální stav pomocí nápisu a barvy. Projekt demonstruje čtení digitálního vstupu, nastavování digitálního výstupu a propojení hardwarového ovládání s grafickou aplikací.

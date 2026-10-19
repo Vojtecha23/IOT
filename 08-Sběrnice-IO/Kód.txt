@@ -1,0 +1,132 @@
+
+
+from tkinter import Tk, Scale, HORIZONTAL, Label
+
+import smbus2
+
+import time
+
+# --- Nastavení I2C ---
+
+# Pokud displej nereaguje nebo to hází chybu, změň 0x27 na 0x3F
+
+I2C_ADRESA = 0x27 
+
+bus = smbus2.SMBus(1)
+
+# --- Nízkoúrovňové funkce pro displej (nahrazují knihovnu RPLCD) ---
+
+def lcd_posli(bits, mode):
+
+    # mode=1 pro data (znak), mode=0 pro příkaz (např. smazání)
+
+    bits_high = mode | (bits & 0xF0) | 0x08
+
+    bits_low = mode | ((bits << 4) & 0xF0) | 0x08
+
+    bus.write_byte(I2C_ADRESA, bits_high)
+
+    lcd_toggle(bits_high)
+
+    bus.write_byte(I2C_ADRESA, bits_low)
+
+    lcd_toggle(bits_low)
+
+def lcd_toggle(bits):
+
+    time.sleep(0.0001)
+
+    bus.write_byte(I2C_ADRESA, (bits | 0x04))
+
+    time.sleep(0.0001)
+
+    bus.write_byte(I2C_ADRESA, (bits & ~0x04))
+
+    time.sleep(0.0001)
+
+def lcd_init():
+
+    lcd_posli(0x33, 0) # Inicializace sekvence
+
+    lcd_posli(0x32, 0) # Nastavení na 4-bitový režim
+
+    lcd_posli(0x06, 0) # Nastavení směru posunu kurzoru
+
+    lcd_posli(0x0C, 0) # Zapnutí displeje, vypnutí kurzoru
+
+    lcd_posli(0x28, 0) # 2 řádky, matice znaků 5x8
+
+    lcd_posli(0x01, 0) # Kompletní smazání displeje
+
+    time.sleep(0.005)
+
+def lcd_text(text, radek):
+
+    # 0x80 je adresa prvního řádku, 0xC0 je adresa druhého řádku
+
+    text = text.ljust(16, " ") # Automaticky doplní mezery na konec (přemaže starý text)
+
+    lcd_posli(radek, 0)
+
+    for i in range(16):
+
+        lcd_posli(ord(text[i]), 1)
+
+# ------------------------------------------------------------------
+
+# 1. Start a inicializace hardwaru
+
+try:
+
+    lcd_init()
+
+    lcd_text("Dashboard start!", 0x80) # Vypíše na první řádek
+
+except Exception as chyba:
+
+    print(f"I2C Chyba (Zkontroluj adresu nebo zapojení): {chyba}")
+
+# 2. Funkce, která se volá při pohnutí posuvníkem
+
+def aktualizuj_vystup(hodnota):
+
+    intenzita = int(hodnota)
+
+    lcd_text("Hodnota z PC:", 0x80)            # 1. řádek
+
+    lcd_text(f"--> {intenzita} %", 0xC0)       # 2. řádek
+
+# 3. Grafické rozhraní (Dashboard)
+
+okno = Tk()
+
+okno.title("Raw I2C Dashboard")
+
+okno.geometry("350x150")
+
+nadpis = Label(okno, text="Posuvník (Vstup)", font=("Arial", 16))
+
+nadpis.pack(pady=15)
+
+posuvnik = Scale(okno, from_=0, to=100, orient=HORIZONTAL, command=aktualizuj_vystup, length=250)
+
+posuvnik.pack(pady=10)
+
+# Úklid: Při zavření křížkem displej vymažeme, aby na něm nezůstal starý text
+
+def pri_zavreni():
+
+    try:
+
+        lcd_posli(0x01, 0) 
+
+    except:
+
+        pass
+
+    okno.destroy()
+
+okno.protocol("WM_DELETE_WINDOW", pri_zavreni)
+
+okno.mainloop()
+ 

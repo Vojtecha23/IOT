@@ -1,0 +1,32 @@
+Tento projekt ukazuje komunikaci Raspberry Pi s LCD displejem prostřednictvím sběrnice I²C. Cílem je vytvořit jednoduchý grafický dashboard, ve kterém uživatel nastavuje hodnotu od 0 do 100 pomocí posuvníku. Nastavená hodnota se následně odešle přes I²C a zobrazí na dvouřádkovém LCD displeji 16 × 2. Projekt tak propojuje grafické rozhraní v počítači s externím zobrazovacím zařízením.
+
+Vstup (grafický posuvník): V okně vytvořeném pomocí knihovny Tkinter se nachází vodorovný posuvník Scale s rozsahem 0 až 100. Při změně jeho polohy se automaticky zavolá funkce aktualizuj_vystup(hodnota). Program převede získanou hodnotu na celé číslo a připraví text, který následně odešle na displej. Není potřeba žádné externí fyzické tlačítko ani senzor.
+
+Výstup (LCD displej přes I²C): Výstupním zařízením je znakový LCD displej 16 × 2 s I²C převodníkem. Na prvním řádku se zobrazuje text „Hodnota z PC:“ a na druhém řádku aktuálně nastavená hodnota ve tvaru „--> 50 %“. Komunikace probíhá přes knihovnu smbus2 a I²C adresu 0x27. Některé moduly mohou používat adresu 0x3F, kterou je v takovém případě nutné v programu změnit. Díky I²C stačí pro přenos dat pouze dva signálové vodiče – SDA a SCL – společně s napájením.
+
+Zapojení součástek
+Pro projekt je potřeba Raspberry Pi s funkční sběrnicí I²C, znakový LCD displej 16 × 2 s I²C převodníkem, propojovací vodiče a případně nepájivé pole. Na Raspberry Pi je nutné mít povolené rozhraní I²C a nainstalovanou knihovnu smbus2. Pro grafické prostředí se používá Tkinter.
+
+1. Zapojení LCD displeje (I²C):
+
+SDA: Datový pin LCD modulu připojíme na GPIO 2 (fyzický pin 3) Raspberry Pi.
+
+SCL: Hodinový pin LCD modulu připojíme na GPIO 3 (fyzický pin 5) Raspberry Pi.
+
+GND: Zem LCD modulu připojíme na GND Raspberry Pi (například fyzický pin 6).
+
+VCC: Napájení LCD modulu připojíme podle požadavků konkrétního displeje a převodníku. Některé moduly jsou napájené 5 V, ale GPIO Raspberry Pi pracují s logikou 3,3 V a nejsou odolné vůči 5 V. Pokud I²C převodník přitahuje SDA/SCL k 5 V, je nutné použít vhodný obousměrný převodník logických úrovní nebo jinak zajistit bezpečné úrovně signálu.
+
+2. Softwarové ovládání:
+
+Uživatel ovládá posuvník myší přímo v grafickém okně. Změna hodnoty spustí odeslání nového textu na displej, takže další hardware pro vstup není nutný.
+
+Princip programu
+Program nejprve importuje Tkinter pro vytvoření grafického okna, smbus2 pro komunikaci přes I²C a time pro krátké časové prodlevy. Nastaví adresu LCD na 0x27 a otevře sběrnici SMBus(1). Namísto hotové knihovny pro LCD používá vlastní nízkoúrovňové funkce lcd_posli(), lcd_toggle(), lcd_init() a lcd_text().
+
+Funkce lcd_posli() rozděluje posílaný bajt na dvě čtyřbitové části, protože displej je ovládán ve 4bitovém režimu. Funkce lcd_toggle() vytvoří krátký impuls na povolovacím signálu displeje, kterým se přenášená data potvrdí. Funkce lcd_init() nastaví režim LCD, zapne zobrazování, vypne kurzor a vymaže obsah. Funkce lcd_text() nastaví požadovaný řádek a postupně odešle 16 znaků; kratší text doplní mezerami, aby na displeji nezůstávaly znaky předchozí hodnoty.
+
+Po spuštění se program pokusí inicializovat LCD a zobrazit na něm text „Dashboard start!“. Pokud komunikace selže, vypíše do konzole chybové hlášení. Následně otevře okno „Raw I2C Dashboard“ o rozměrech 350 × 150 pixelů, ve kterém je nadpis a posuvník. Jakmile uživatel posune jezdec, funkce aktualizuj_vystup() přepíše oba řádky displeje podle aktuální hodnoty. Při zavření okna se program pokusí displej vymazat a následně grafickou aplikaci ukončí.
+
+Výsledek
+Pohybem posuvníku v grafickém okně se nastavuje hodnota od 0 do 100, která se okamžitě přenáší na LCD displej přes sběrnici I²C. Na displeji se zobrazuje popisek a aktuální procentuální hodnota. Projekt demonstruje princip sběrnicové komunikace, adresování zařízení na I²C, přenos znaků na LCD a propojení grafické aplikace s fyzickým výstupním modulem.

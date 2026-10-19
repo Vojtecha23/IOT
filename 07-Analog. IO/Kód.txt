@@ -1,0 +1,23 @@
+from tkinter import Tk, Scale, HORIZONTAL, Label
+from gpiozero import PWMOutputDevice
+from gpiozero.pins.pigpio import PiGPIOFactory
+# Aktivace hardwarového ovládání pinů pro čistý zvuk
+tovarna = PiGPIOFactory()
+# Inicializace bzučáku na GPIO 18 s hardwarovým PWM
+bzucak = PWMOutputDevice(18, pin_factory=tovarna)
+# Funkce, která se zavolá při každém pohnutí posuvníku
+def zmen_hlasitost(hodnota):
+    # Převod z 0-100 na 0.0 až 1.0 pro gpiozero
+    intenzita = int(hodnota) / 100.0
+    bzucak.value = intenzita
+# Nastavení grafického okna
+okno = Tk()
+okno.title("Bzučák Dashboard")
+okno.geometry("350x150")
+nadpis = Label(okno, text="Intenzita bzučáku", font=("Arial", 16))
+nadpis.pack(pady=15)
+# Vytvoření posuvníku (zavolá zmen_hlasitost při každém posunu)
+posuvnik = Scale(okno, from_=0, to=100, orient=HORIZONTAL, command=zmen_hlasitost, length=250)
+posuvnik.pack(pady=10)
+# Spuštění aplikace
+okno.mainloop()

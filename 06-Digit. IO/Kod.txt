@@ -1,0 +1,40 @@
+from tkinter import Tk, Button as TkButton
+from gpiozero import LED, Button as GpioButton
+# Inicializace hardwaru
+led = LED(17)                 # Fyzický pin 11
+hw_tlacitko = GpioButton(27)  # Fyzický pin 13
+# Pomocná funkce pro překreslení barvy v GUI
+def aktualizuj_gui():
+    if led.is_lit:
+        tlacitko.config(text="ZAPNUTO", bg="green")
+    else:
+        tlacitko.config(text="VYPNUTO", bg="red")
+# Co se stane při kliknutí myší v okně
+def prepni_z_gui():
+    led.toggle()
+    aktualizuj_gui()
+# Co se stane při stisknutí fyzického tlačítka
+def prepni_z_hw():
+    led.toggle()
+    # Jelikož gpiozero běží na pozadí, musíme GUI aktualizovat bezpečně přes .after
+    okno.after(0, aktualizuj_gui)
+# Propojení fyzického tlačítka s naší funkcí
+hw_tlacitko.when_pressed = prepni_z_hw
+# Nastavení hlavního okna
+okno = Tk()
+okno.title("Duální LED Dashboard")
+okno.geometry("300x200")
+pocitovy_stav = "ZAPNUTO" if led.is_lit else "VYPNUTO"
+pocitova_barva = "green" if led.is_lit else "red"
+# Vytvoření softwarového tlačítka (TkButton)
+tlacitko = TkButton(
+    okno, 
+    text=pocitovy_stav, 
+    bg=pocitova_barva, 
+    fg="white", 
+    font=("Arial", 24, "bold"), 
+    command=prepni_z_gui
+)
+tlacitko.pack(expand=True, fill="both", padx=20, pady=20)
+# Spuštění aplikace
+okno.mainloop()
