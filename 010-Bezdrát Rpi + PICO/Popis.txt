@@ -1,0 +1,28 @@
+### Popis projektu
+
+Cílem projektu bylo propojit dvě Raspberry Pi Pico a Raspberry Pi 4 a vytvořit jednoduchý systém pro ovládání LED diody pomocí tlačítka.
+
+Celý systém funguje na principu předávání digitálního signálu mezi jednotlivými zařízeními.
+
+**Princip fungování:**
+
+Na prvním Raspberry Pi Pico je připojeno tlačítko. Při každém stisknutí se změní stav výstupu mezi logickou 0 a 1. Tento signál je veden do Raspberry Pi 4, které slouží jako prostředník a přeposílá jej do druhého Raspberry Pi Pico.
+
+Druhé Pico přijímá signál a podle jeho hodnoty rozsvítí nebo zhasne LED diodu.
+
+**Použité komponenty:**
+- 2× Raspberry Pi Pico
+- 1× Raspberry Pi 4
+- Tlačítko
+- Červená LED dioda a rezistor
+- Nepájivé pole a propojovací vodiče
+
+**Programové řešení:**
+
+Programy pro Raspberry Pi Pico jsou napsány v MicroPythonu s využitím knihovny `machine`. Raspberry Pi 4 využívá Python a knihovnu `gpiozero`.
+
+V programu je také ošetřeno opakované zaznamenání stisku tlačítka pomocí krátkého zpoždění.
+
+**Výsledek:**
+
+Pomocí tlačítka na prvním Raspberry Pi Pico lze zapínat a vypínat LED diodu připojenou ke druhému Picu. Raspberry Pi 4 přitom zajišťuje předávání signálu mezi oběma zařízeními.

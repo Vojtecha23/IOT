@@ -1,0 +1,78 @@
+Tlacitko
+
+from machine import Pin
+
+import time
+
+tlacitko = Pin(14, Pin.IN, Pin.PULL_UP)
+
+vystup_do_rpi = Pin(15, Pin.OUT)
+
+stav_vystupu = 0
+
+stary_stav = 1
+
+while True:
+
+    stav = tlacitko.value()
+
+    # Pokud je tlačítko stisknuto
+
+    if stav == 0 and stary_stav == 1:
+
+        stav_vystupu = not stav_vystupu  # Překlopí stav z 0 na 1 (nebo z 1 na 0)
+
+        vystup_do_rpi.value(stav_vystupu) # Pošle signál po drátu ven
+
+        time.sleep(0.3) # Ochrana proti zákmitům tlačítka
+
+    stary_stav = stav
+
+    time.sleep(0.05)
+
+ 
+Led 
+
+from machine import Pin
+
+import time
+
+vstup_z_rpi = Pin(14, Pin.IN, Pin.PULL_DOWN)
+
+led = Pin(15, Pin.OUT)
+
+while True:
+
+    # Přečte stav drátu a nastaví podle toho LEDku
+
+    aktualni_signal = vstup_z_rpi.value()
+
+    led.value(aktualni_signal)
+
+    time.sleep(0.05)
+
+ 
+pi 4
+
+from gpiozero import Button, LED
+
+from signal import pause
+
+# Čteme napětí z Pica 2 (není to reálné tlačítko, jen čteme signál z drátu)
+
+vstup_z_pica_2 = Button(23, pull_up=False) 
+
+# Posíláme napětí do Pica 1 (chová se jako výstup)
+
+vystup_do_pica_1 = LED(24)
+
+# Když přijde 3.3V z prvního drátu, pošli 3.3V do druhého drátu
+
+vstup_z_pica_2.when_pressed = vystup_do_pica_1.on
+
+vstup_z_pica_2.when_released = vystup_do_pica_1.off
+
+print("Raspberry Pi 4 funguje jako drátový most. Čekám na signál...")
+
+pause()
+ 
