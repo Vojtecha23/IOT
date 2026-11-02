@@ -1,25 +1,48 @@
+# Úloha 07 – Ovládání bzučáku a servomotoru pomocí PWM
 
-Tento projekt ukazuje, jak pomocí Raspberry Pi ovládat výstupní zařízení proměnnou hodnotou. V grafickém okně vytvořeném knihovnou Tkinter je posuvník s rozsahem 0 až 100. Jeho nastavením se mění střída PWM signálu na GPIO 18, kterým je řízen připojený bzučák. Jde o ukázku analogově působícího řízení pomocí digitálního signálu.
+## Popis úlohy
+V této úloze jsem vytvořil jednoduchý grafický dashboard pomocí knihovny Tkinter, který umožňuje ovládat bzučák a servomotor připojené k Raspberry Pi.
 
-Vstup (grafický posuvník): Ovládací prvek Scale umožňuje myší nastavit hodnotu od 0 do 100. Při každém posunutí se zavolá funkce zmen_hlasitost(hodnota). Ta přijatou hodnotu převede vydělením číslem 100 na desetinné číslo v rozsahu 0,0 až 1,0 a předá je do knihovny gpiozero.
+Pomocí dvou posuvníků mohu měnit intenzitu výstupu pro bzučák a polohu servomotoru. Pro ovládání obou zařízení využívám softwarové PWM prostřednictvím knihovny gpiozero.
 
-Výstup (PWM a bzučák): Bzučák je připojen na pin GPIO 18 (fyzický pin 12). Program používá PWMOutputDevice a PiGPIOFactory, která zajišťuje generování PWM prostřednictvím služby pigpio. PWM (pulzně šířková modulace) rychle střídá zapnutý a vypnutý stav výstupu. Změnou střídy, tedy poměru doby zapnutí vůči celé periodě, se mění působení signálu na připojené zařízení. Hodnota 0 znamená nulovou střídu (vypnutý výstup), hodnota 0,5 přibližně 50% střídu a hodnota 1 trvale zapnutý výstup. Skutečná hlasitost a charakter zvuku závisí na typu použitého bzučáku a frekvenci PWM; samotná změna střídy proto nemusí znamenat plynulou změnu vnímané hlasitosti.
+## Použité součástky
+- Raspberry Pi
+- Bzučák vhodný pro PWM ovládání
+- Servomotor
+- Propojovací vodiče
+- Externí napájení servomotoru podle jeho požadavků
 
-Zapojení součástek
-Pro projekt je potřeba Raspberry Pi, bzučák vhodný pro řízení z GPIO, propojovací vodiče a případně nepájivé pole. Použití konkrétního bzučáku musí odpovídat napěťovým a proudovým možnostem GPIO (3,3 V). Bzučák s vyšším odběrem se nesmí napájet přímo z GPIO; je nutné použít vhodný tranzistorový spínač a případné samostatné napájení.
+## Zapojení
+**Bzučák:**
+- Kladný vstup (+) → GPIO18
+- Záporný vstup (−) → GND
 
-1. Zapojení bzučáku (PWM výstup):
+**Servomotor:**
+- Signálový vodič → GPIO13
+- Napájecí vodič → externí zdroj odpovídající parametrům serva
+- Zemnicí vodič → GND Raspberry Pi a externího zdroje (společná zem)
 
-Signál: GPIO 18 (fyzický pin 12) slouží k řízení bzučáku. U nízkopříkonového bzučáku určeného pro přímé připojení k 3,3V GPIO vede na jeho kladný kontakt; u výkonnějšího bzučáku ovládá spínací obvod.
+Bzučák musí být vhodný pro přímé ovládání z GPIO. Pokud odebírá větší proud, je nutné použít tranzistorový spínač.
 
-Zem: Záporný kontakt bzučáku, případně zem jeho napájecího obvodu, je připojen na GND Raspberry Pi (například fyzický pin 14).
+## Princip fungování
+Po spuštění programu se otevře grafické okno se dvěma posuvníky.
 
-2. Softwarové ovládání:
+**První posuvník – bzučák:**
+- Rozsah 0–100 %
+- Nastavuje střídu PWM signálu
+- Při hodnotě 0 % je PWM výstup vypnutý
 
-Vstupem není externí senzor ani potenciometr, ale posuvník v grafickém prostředí. K jeho ovládání se používá myš a není nutné připojovat další fyzické tlačítko.
+**Druhý posuvník – servomotor:**
+- Rozsah 0–100 %
+- Hodnota 0 % odpovídá jednomu krajnímu natočení
+- Hodnota 50 % odpovídá středové poloze
+- Hodnota 100 % odpovídá druhému krajnímu natočení
 
-Princip programu
-Program importuje prvky Tk, Scale a Label z knihovny Tkinter a třídy PWMOutputDevice a PiGPIOFactory z gpiozero. Nejprve nastaví PiGPIOFactory a inicializuje PWM výstup na GPIO 18. Poté otevře okno „Bzučák Dashboard“ o rozměrech 350 × 150 pixelů. V okně zobrazí nadpis „Intenzita bzučáku“ a vodorovný posuvník od 0 do 100. Každá změna polohy posuvníku vyvolá funkci zmen_hlasitost(), která vypočítá požadovanou střídu a zapíše ji do bzucak.value. O chod grafického rozhraní se stará okno.mainloop(). Aby fungovala zvolená PiGPIOFactory, musí být v prostředí dostupná a spuštěná služba pigpio.
+Program převádí hodnotu druhého posuvníku na rozsah −1 až +1, který používá knihovna gpiozero pro řízení servomotoru.
 
-Výsledek
-Uživatel posouvá jezdec v grafickém okně a tím nastavuje střídu PWM signálu na GPIO 18. Bzučák podle svého typu reaguje změnou zvukového projevu nebo zapínání; při hodnotě 0 se výstup vypne. Projekt demonstruje řízení výstupního zařízení proměnnou hodnotou, využití PWM a propojení grafické aplikace s GPIO Raspberry Pi.
+## Použité knihovny
+- **tkinter** – vytvoření grafického dashboardu
+- **gpiozero** – ovládání PWM výstupu a servomotoru
+
+## Závěr
+V této úloze jsem si vyzkoušel ovládání dvou zařízení pomocí grafického prostředí a PWM. Naučil jsem se převádět hodnoty posuvníků na hodnoty potřebné pro ovládání bzučáku a servomotoru. Výhodou je jednoduché a přehledné ovládání obou zařízení z jednoho okna.

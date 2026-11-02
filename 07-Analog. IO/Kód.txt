@@ -1,23 +1,31 @@
 from tkinter import Tk, Scale, HORIZONTAL, Label
-from gpiozero import PWMOutputDevice
-from gpiozero.pins.pigpio import PiGPIOFactory
-# Aktivace hardwarového ovládání pinů pro čistý zvuk
-tovarna = PiGPIOFactory()
-# Inicializace bzučáku na GPIO 18 s hardwarovým PWM
-bzucak = PWMOutputDevice(18, pin_factory=tovarna)
-# Funkce, která se zavolá při každém pohnutí posuvníku
+from gpiozero import PWMOutputDevice, Servo
+# 1. Výstup: Bzučák na GPIO 18 (využije výchozí softwarové PWM)
+bzucak = PWMOutputDevice(18)
+# 2. Výstup: Servo na GPIO 13 (využije výchozí softwarové PWM)
+servo = Servo(13)
 def zmen_hlasitost(hodnota):
-    # Převod z 0-100 na 0.0 až 1.0 pro gpiozero
-    intenzita = int(hodnota) / 100.0
-    bzucak.value = intenzita
+   # Bzučák bere intenzitu od 0.0 do 1.0
+   intenzita = int(hodnota) / 100.0
+   bzucak.value = intenzita
+def zmen_uhel(hodnota):
+   # Servo v gpiozero bere hodnoty od -1.0 do 1.0
+   procenta = int(hodnota)
+   uhel = (procenta / 50.0) - 1.0
+   servo.value = uhel
 # Nastavení grafického okna
 okno = Tk()
-okno.title("Bzučák Dashboard")
-okno.geometry("350x150")
-nadpis = Label(okno, text="Intenzita bzučáku", font=("Arial", 16))
-nadpis.pack(pady=15)
-# Vytvoření posuvníku (zavolá zmen_hlasitost při každém posunu)
-posuvnik = Scale(okno, from_=0, to=100, orient=HORIZONTAL, command=zmen_hlasitost, length=250)
-posuvnik.pack(pady=10)
+okno.title("Duální Dashboard (Softwarové PWM)")
+okno.geometry("350x250")
+# --- Sekce pro Bzučák ---
+Label(okno, text="Intenzita bzučáku", font=("Arial", 12, "bold")).pack(pady=(15, 0))
+posuvnik_bzucak = Scale(okno, from_=0, to=100, orient=HORIZONTAL, command=zmen_hlasitost, length=250)
+posuvnik_bzucak.pack(pady=(0, 10))
+# --- Sekce pro Servo ---
+Label(okno, text="Natočení serva", font=("Arial", 12, "bold")).pack(pady=(15, 0))
+posuvnik_servo = Scale(okno, from_=0, to=100, orient=HORIZONTAL, command=zmen_uhel, length=250)
+# Z bezpečnostních důvodů nastavíme servo rovnou doprostřed (hodnota 0.0)
+posuvnik_servo.set(50)
+posuvnik_servo.pack(pady=(0, 10))
 # Spuštění aplikace
 okno.mainloop()
