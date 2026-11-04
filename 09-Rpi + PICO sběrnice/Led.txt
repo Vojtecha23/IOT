@@ -1,0 +1,6 @@
+from machine import Pin
+vstup_z_rpi = Pin(14, Pin.IN, Pin.PULL_DOWN)
+led = Pin(15, Pin.OUT)
+while True:
+   # Co přijde z velkého RPi, to pošli do LEDky
+   led.value(vstup_z_rpi.value())

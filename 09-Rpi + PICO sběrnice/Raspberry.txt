@@ -1,0 +1,11 @@
+from gpiozero import Button, LED
+from signal import pause
+# Čteme napětí z Pica 1 (Pin 16)
+vstup_z_pica_1 = Button(23, pull_up=False)
+# Posíláme napětí do Pica 2 (Pin 18)
+vystup_do_pica_2 = LED(24)
+# Když přijde signál, přemosti ho dál
+vstup_z_pica_1.when_pressed = vystup_do_pica_2.on
+vstup_z_pica_1.when_released = vystup_do_pica_2.off
+print("Velké Raspberry běží jako most. Zmáčkni tlačítko na Piku!")
+pause()

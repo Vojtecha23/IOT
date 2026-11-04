@@ -1,65 +1,92 @@
+"""Uloha 08: physical MCP3008 input, I2C LCD, optional TM1637 and Tkinter."""
 import tkinter as tk
-from gpiozero import MCP3008
-import smbus2
 import time
+from gpiozero import MCP3008
+from smbus2 import SMBus
 
-ADDR = 0x27
-bus = smbus2.SMBus(1)
+# 7segment modul vyzaduje knihovnu tm1637; pokud neni pripojen, ponechte False.
+POUZIT_TM1637 = True
+LCD_ADRESA = 0x27  # pripadne 0x3F podle i2cdetect -y 1
+
 adc = MCP3008(channel=0)
-root = tk.Tk()
-root.title('I2C LCD + ADC dashboard')
-root.geometry('390x190')
-label = tk.Label(root, font=('Arial', 17))
-label.pack(pady=15)
-bar = tk.Scale(root, from_=0, to=100, orient='horizontal', label='Softwarovy offset (-50 az +50)', length=300)
-bar.set(50)
-bar.pack()
+bus = SMBus(1)
+segment = None
+if POUZIT_TM1637:
+    import tm1637
+    segment = tm1637.TM1637(clk=21, dio=20)
+    segment.brightness(2)
 
-def write4(nib, mode):
-    data = (nib & 0xF0) | mode | 0x08
-    bus.write_byte(ADDR, data)
-    bus.write_byte(ADDR, data | 0x04)
+
+def nibble(cast, rs=0):
+    bits = (cast & 0xF0) | rs | 0x08
+    bus.write_byte(LCD_ADRESA, bits)
+    bus.write_byte(LCD_ADRESA, bits | 0x04)
     time.sleep(0.0001)
-    bus.write_byte(ADDR, data)
+    bus.write_byte(LCD_ADRESA, bits)
 
-def send(value, mode=0):
-    write4(value & 0xF0, mode)
-    write4((value << 4) & 0xF0, mode)
 
-def init():
+def lcd_send(byte, rs=0):
+    nibble(byte & 0xF0, rs)
+    nibble((byte << 4) & 0xF0, rs)
+
+
+def lcd_init():
     time.sleep(0.05)
-    for value in (0x30,0x30,0x30,0x20):
-        write4(value, 0)
+    for cmd in (0x30, 0x30, 0x30, 0x20):
+        nibble(cmd)
         time.sleep(0.005)
     for cmd in (0x28, 0x08, 0x01, 0x06, 0x0C):
-        send(cmd)
-        time.sleep(0.003)
+        lcd_send(cmd)
+        time.sleep(0.005)
 
-def display(row, line):
-    send(0x80 if row == 0 else 0xC0)
-    for ch in line.ljust(16)[:16]:
-        send(ord(ch), 1)
 
-init()
+def lcd_row(index, message):
+    lcd_send(0x80 if index == 0 else 0xC0)
+    for char in message.ljust(16)[:16]:
+        lcd_send(ord(char), 1)
 
-def update():
-    raw = round(adc.value*100)
-    result = min(100, max(0, raw + bar.get() - 50))
-    label.config(text='Fyzicky vstup: %d %% | LCD: %d %%' % (raw, result))
+
+lcd_init()
+okno = tk.Tk()
+okno.title('08 - Fyzicky vstup + LCD I2C')
+okno.geometry('460x245')
+text = tk.StringVar(value='Cekam na hodnotu...')
+tk.Label(okno, text='Potenciometr + LCD + 7segment', font=('Arial', 14, 'bold')).pack(pady=12)
+tk.Label(okno, textvariable=text, font=('Arial', 12)).pack()
+tk.Label(okno, text='Softwarova korekce: -50 az +50').pack(pady=(12, 0))
+korekce = tk.Scale(okno, from_=-50, to=50, orient=tk.HORIZONTAL, length=320)
+korekce.set(0)
+korekce.pack()
+posledni = None
+
+def obnov():
+    global posledni
     try:
-        display(0, 'Potenciometr ADC')
-        display(1, 'Hodnota: %3d %%' % result)
-    except OSError as e:
-        label.config(text='I2C chyba: %s' % e)
-    root.after(200, update)
+        fyzicka = round(adc.value * 100)
+        vysledek = max(0, min(100, fyzicka + korekce.get()))
+        text.set(f'Potenciometr {fyzicka} %  |  LCD {vysledek} %')
+        if vysledek != posledni:
+            lcd_row(0, 'Hodnota ADC:')
+            lcd_row(1, f'-- > {vysledek:3d} %')
+            if segment:
+                segment.number(vysledek)
+            posledni = vysledek
+    except OSError as exc:
+        text.set(f'Chyba I2C: {exc}')
+    except Exception as exc:
+        text.set(f'Chyba: {exc}')
+    okno.after(200, obnov)
 
-def close():
+def zavrit():
     try:
-        send(0x01)
+        lcd_send(0x01)
+        if segment:
+            segment.write([0, 0, 0, 0])
     finally:
-        adc.close()
         bus.close()
-        root.destroy()
-root.protocol('WM_DELETE_WINDOW', close)
-update()
-root.mainloop()
+        adc.close()
+        okno.destroy()
+
+okno.protocol('WM_DELETE_WINDOW', zavrit)
+obnov()
+okno.mainloop()

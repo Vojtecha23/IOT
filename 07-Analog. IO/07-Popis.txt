@@ -1,48 +1,25 @@
-# Úloha 07 – Ovládání bzučáku a servomotoru pomocí PWM
+ÚLOHA 07 – Analogový vstup, PWM bzučák, servo a Tkinter
 
-## Popis úlohy
-V této úloze jsem vytvořil jednoduchý grafický dashboard pomocí knihovny Tkinter, který umožňuje ovládat bzučák a servomotor připojené k Raspberry Pi.
+Cíl:
+Vytvořil jsem dashboard, ve kterém kombinuji skutečný analogový vstup (potenciometr) s ovládáním výstupů přes PWM. Potenciometr se snímá pomocí převodníku MCP3008 připojeného přes SPI, protože Raspberry Pi nemá analogový vstup.
 
-Pomocí dvou posuvníků mohu měnit intenzitu výstupu pro bzučák a polohu servomotoru. Pro ovládání obou zařízení využívám softwarové PWM prostřednictvím knihovny gpiozero.
+Součástky:
+Raspberry Pi s grafickým prostředím, potenciometr, MCP3008, bzučák vhodný pro PWM řízení, servomotor, vodiče, nepájivé pole, vhodné napájení serva. U bzučáku, který odebírá vyšší proud, je nutný tranzistorový spínač.
 
-## Použité součástky
-- Raspberry Pi
-- Bzučák vhodný pro PWM ovládání
-- Servomotor
-- Propojovací vodiče
-- Externí napájení servomotoru podle jeho požadavků
+Zapojení (BCM čísla GPIO; viz společný návod):
+- Potenciometr: krajní piny na 3,3 V a GND; prostřední vývod na MCP3008 CH0.
+- MCP3008: VDD/VREF na 3,3 V; AGND/DGND na GND; CLK na GPIO11, DOUT na GPIO9, DIN na GPIO10, CS/SHDN na GPIO8.
+- Bzučák: PWM řídicí signál GPIO18, společná GND (dle parametrů případně přes tranzistor).
+- Servo: signál GPIO13, napájení z vhodného samostatného zdroje, společná GND s Raspberry Pi.
 
-## Zapojení
-**Bzučák:**
-- Kladný vstup (+) → GPIO18
-- Záporný vstup (−) → GND
+Funkce:
+Při otáčení fyzickým potenciometrem program čte analogovou hodnotu 0 až 100 %. Z této hodnoty a softwarového limitu v Tkinteru počítá střídu PWM bzučáku. Druhý posuvník nastavuje polohu servomotoru v rozsahu přibližně 0 až 180 stupňů (skutečný rozsah se liší podle serva). Dashboard zobrazuje aktuální polohu potenciometru, PWM střídu a nastavený úhel serva. Nulová střída znamená vypnutý PWM výstup. U pasivního bzučáku se změnou střídy nemusí měnit hlasitost lineárně, u aktivního bzučáku se změny mohou chovat jinak.
 
-**Servomotor:**
-- Signálový vodič → GPIO13
-- Napájecí vodič → externí zdroj odpovídající parametrům serva
-- Zemnicí vodič → GND Raspberry Pi a externího zdroje (společná zem)
+Knihovny: tkinter, gpiozero (MCP3008, PWMOutputDevice, Servo).
 
-Bzučák musí být vhodný pro přímé ovládání z GPIO. Pokud odebírá větší proud, je nutné použít tranzistorový spínač.
+Spuštění: povolit SPI, zapojit součástky, spustit python3 dashboard.py.
 
-## Princip fungování
-Po spuštění programu se otevře grafické okno se dvěma posuvníky.
+Dokumentace k doplnění: nová fotografie zapojení a video, kde fyzické otáčení potenciometru skutečně mění hodnotu na dashboardu a reakci bzučáku. Starší video se samotnými posuvníky toto nedokládá.
 
-**První posuvník – bzučák:**
-- Rozsah 0–100 %
-- Nastavuje střídu PWM signálu
-- Při hodnotě 0 % je PWM výstup vypnutý
-
-**Druhý posuvník – servomotor:**
-- Rozsah 0–100 %
-- Hodnota 0 % odpovídá jednomu krajnímu natočení
-- Hodnota 50 % odpovídá středové poloze
-- Hodnota 100 % odpovídá druhému krajnímu natočení
-
-Program převádí hodnotu druhého posuvníku na rozsah −1 až +1, který používá knihovna gpiozero pro řízení servomotoru.
-
-## Použité knihovny
-- **tkinter** – vytvoření grafického dashboardu
-- **gpiozero** – ovládání PWM výstupu a servomotoru
-
-## Závěr
-V této úloze jsem si vyzkoušel ovládání dvou zařízení pomocí grafického prostředí a PWM. Naučil jsem se převádět hodnoty posuvníků na hodnoty potřebné pro ovládání bzučáku a servomotoru. Výhodou je jednoduché a přehledné ovládání obou zařízení z jednoho okna.
+Závěr:
+Projekt ukazuje práci s fyzickým analogovým vstupem přes ADC, digitálním grafickým dashboardem a PWM výstupy. Funkčnost je nutné ověřit při reálném zapojení.

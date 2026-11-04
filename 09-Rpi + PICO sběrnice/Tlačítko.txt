@@ -1,0 +1,10 @@
+from machine import Pin
+import time
+tlacitko = Pin(14, Pin.IN, Pin.PULL_UP)
+vystup_do_rpi = Pin(15, Pin.OUT)
+while True:
+   if tlacitko.value() == 0:  # Tlačítko je stisknuto
+       vystup_do_rpi.value(1) # Pošli signál do velkého RPi
+   else:
+       vystup_do_rpi.value(0)
+   time.sleep(0.05)

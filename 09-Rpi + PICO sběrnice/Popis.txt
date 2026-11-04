@@ -1,0 +1,47 @@
+# Cvičení 09 – Přenos digitálního signálu mezi Raspberry Pi Pico a Raspberry Pi
+
+## Popis úlohy
+V tomto cvičení jsem vytvořil systém, který přenáší digitální signál mezi dvěma Raspberry Pi Pico prostřednictvím Raspberry Pi.
+
+Po stisknutí tlačítka na prvním Pico se odešle signál do Raspberry Pi, které funguje jako prostředník. To následně předá signál druhému Pico, kde se rozsvítí LED dioda. Po uvolnění tlačítka LED zhasne.
+
+## Použité součástky
+- 2× Raspberry Pi Pico
+- 1× Raspberry Pi
+- Tlačítko
+- LED dioda a rezistor 330 Ω
+- Propojovací vodiče
+- Nepájivé pole
+
+## Zapojení
+**Raspberry Pi Pico 1 – vysílač**
+- GP14 – tlačítko připojené proti GND
+- GP15 – digitální výstup do GPIO23 Raspberry Pi
+
+**Raspberry Pi – prostředník**
+- GPIO23 – příjem signálu z prvního Pico
+- GPIO24 – výstup signálu do druhého Pico
+
+**Raspberry Pi Pico 2 – přijímač**
+- GP14 – příjem signálu z GPIO24 Raspberry Pi
+- GP15 – LED dioda zapojená přes rezistor 330 Ω do GND
+
+Všechna zařízení mají společnou zem (GND).
+
+## Princip fungování
+1. Stisknu tlačítko na prvním Pico.
+2. Pico vyšle logickou 1 na GP15.
+3. Raspberry Pi přijme signál přes GPIO23 a předá ho na GPIO24.
+4. Druhé Pico přečte signál na GP14 a rozsvítí LED na GP15.
+5. Po uvolnění tlačítka se signál změní na logickou 0 a LED zhasne.
+
+## Použité knihovny
+- **machine** – práce s GPIO na Raspberry Pi Pico
+- **time** – zpoždění čtení tlačítka
+- **gpiozero** – ovládání vstupu a výstupu Raspberry Pi
+- **signal** – udržení programu v chodu
+
+## Závěr
+V tomto cvičení jsem si vyzkoušel přenos digitálního signálu mezi třemi zařízeními. Naučil jsem se propojit Raspberry Pi Pico s Raspberry Pi a pomocí GPIO pinů předávat signál mezi jednotlivými zařízeními.
+
+Komunikace probíhá přes vodiče a Raspberry Pi slouží jako prostředník mezi vysílačem a přijímačem.

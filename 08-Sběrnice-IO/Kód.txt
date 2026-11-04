@@ -6,19 +6,25 @@ import smbus2
 
 import time
 
-# --- Nastavení I2C ---
+import tm1637
 
-# Pokud displej nereaguje nebo to hází chybu, změň 0x27 na 0x3F
+# --- 1. Nastavení 7-segmentového displeje (TM1637) ---
+
+# CLK na GPIO 21 (pin 40), DIO na GPIO 20 (pin 38)
+
+displej_7seg = tm1637.TM1637(clk=21, dio=20)
+
+displej_7seg.brightness(2) # Nastavení jasu (0 až 7)
+
+displej_7seg.write([0, 0, 0, 0]) # Vymaže 7-segment při startu
+
+# --- 2. Nastavení I2C LCD (Stejné jako minule) ---
 
 I2C_ADRESA = 0x27 
 
 bus = smbus2.SMBus(1)
 
-# --- Nízkoúrovňové funkce pro displej (nahrazují knihovnu RPLCD) ---
-
 def lcd_posli(bits, mode):
-
-    # mode=1 pro data (znak), mode=0 pro příkaz (např. smazání)
 
     bits_high = mode | (bits & 0xF0) | 0x08
 
@@ -46,25 +52,15 @@ def lcd_toggle(bits):
 
 def lcd_init():
 
-    lcd_posli(0x33, 0) # Inicializace sekvence
+    lcd_posli(0x33, 0); lcd_posli(0x32, 0); lcd_posli(0x06, 0)
 
-    lcd_posli(0x32, 0) # Nastavení na 4-bitový režim
-
-    lcd_posli(0x06, 0) # Nastavení směru posunu kurzoru
-
-    lcd_posli(0x0C, 0) # Zapnutí displeje, vypnutí kurzoru
-
-    lcd_posli(0x28, 0) # 2 řádky, matice znaků 5x8
-
-    lcd_posli(0x01, 0) # Kompletní smazání displeje
+    lcd_posli(0x0C, 0); lcd_posli(0x28, 0); lcd_posli(0x01, 0)
 
     time.sleep(0.005)
 
 def lcd_text(text, radek):
 
-    # 0x80 je adresa prvního řádku, 0xC0 je adresa druhého řádku
-
-    text = text.ljust(16, " ") # Automaticky doplní mezery na konec (přemaže starý text)
+    text = text.ljust(16, " ")
 
     lcd_posli(radek, 0)
 
@@ -72,35 +68,39 @@ def lcd_text(text, radek):
 
         lcd_posli(ord(text[i]), 1)
 
-# ------------------------------------------------------------------
-
-# 1. Start a inicializace hardwaru
+# Start I2C displeje
 
 try:
 
     lcd_init()
 
-    lcd_text("Dashboard start!", 0x80) # Vypíše na první řádek
+    lcd_text("Dashboard start!", 0x80)
 
 except Exception as chyba:
 
-    print(f"I2C Chyba (Zkontroluj adresu nebo zapojení): {chyba}")
+    print(f"I2C Chyba LCD: {chyba}")
 
-# 2. Funkce, která se volá při pohnutí posuvníkem
+# --- 3. Funkce, co propojí PC s oběma displeji ---
 
 def aktualizuj_vystup(hodnota):
 
     intenzita = int(hodnota)
 
-    lcd_text("Hodnota z PC:", 0x80)            # 1. řádek
+    # A) Výstup na 16x2 LCD
 
-    lcd_text(f"--> {intenzita} %", 0xC0)       # 2. řádek
+    lcd_text("Hodnota z PC:", 0x80)
 
-# 3. Grafické rozhraní (Dashboard)
+    lcd_text(f"--> {intenzita} %", 0xC0)
+
+    # B) Výstup na 4-místný 7-segmentový displej
+
+    displej_7seg.number(intenzita)
+
+# --- 4. Grafické okno (Dashboard) ---
 
 okno = Tk()
 
-okno.title("Raw I2C Dashboard")
+okno.title("Multi-Displej Dashboard")
 
 okno.geometry("350x150")
 
@@ -112,13 +112,15 @@ posuvnik = Scale(okno, from_=0, to=100, orient=HORIZONTAL, command=aktualizuj_vy
 
 posuvnik.pack(pady=10)
 
-# Úklid: Při zavření křížkem displej vymažeme, aby na něm nezůstal starý text
+# Čisté vypnutí obou displejů při zavření křížkem
 
 def pri_zavreni():
 
     try:
 
-        lcd_posli(0x01, 0) 
+        lcd_posli(0x01, 0)
+
+        displej_7seg.write([0, 0, 0, 0])
 
     except:
 
